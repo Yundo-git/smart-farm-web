@@ -147,7 +147,10 @@ const KoreaMap: React.FC = () => {
       };
 
       const onClick = () => {
-        console.log(`지역 코드: ${region.code}, 지역명: ${region.name}`);
+        // Get the city code (first 2 digits of the region code)
+        const cityCode = region.code.substring(0, 2);
+        // Navigate to the city page
+        window.location.href = `/city/${cityCode}`;
       };
 
       element.addEventListener("mouseenter", onMouseEnter);
@@ -184,10 +187,12 @@ const KoreaMap: React.FC = () => {
   }
 
   return (
-    <div className="flex flex-col items-center p-4 w-full">
-      <div className="bg-white p-4 md:p-6 rounded-xl shadow-lg w-full max-w-4xl">
-        {/* dangerouslySetInnerHTML 대신, svgContainerRef를 사용하여 직접 DOM 조작 */}
-        <div ref={svgContainerRef} className="w-full h-auto min-h-[500px]" />
+    <div className="flex flex-col items-center w-full h-full">
+      <div className="bg-white w-full h-full max-w-4xl">
+        <div 
+          ref={svgContainerRef} 
+          className="w-full h-full min-h-[500px] cursor-pointer"
+        />
       </div>
     </div>
   );
