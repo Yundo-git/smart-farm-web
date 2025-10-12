@@ -262,12 +262,16 @@ const KoreaMap: React.FC = () => {
 
     const handleMouseEnter = (e: Event) => {
       const target = e.currentTarget as HTMLElement;
-      const regionName = target.getAttribute("data-name");
-      if (regionName) {
-        setHoveredRegion(regionName);
-        target.style.zIndex = "10";
-        currentHoveredElement = target;
-      }
+      const regionId = target.id;
+      if (!regionId) return;
+
+      const region = getRegionBysvgId(regionId);
+      if (!region) return;
+
+      // Use the full region name from the regionCodes data
+      setHoveredRegion(region.name);
+      target.style.zIndex = "10";
+      currentHoveredElement = target;
     };
 
     const handleMouseLeave = () => {
@@ -379,8 +383,18 @@ const KoreaMap: React.FC = () => {
   const handleCityChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const city = e.target.value;
     setSelectedCity(city);
+    
+    if (!svgRef.current || !zoomBehaviorRef.current) return;
+    
+    const svg = select<SVGSVGElement, unknown>(svgRef.current);
+    
     if (city) {
       zoomToCity(city);
+    } else {
+      // Reset to show entire map when '전체 보기' is selected
+      svg.transition()
+        .duration(750)
+        .call(zoomBehaviorRef.current.transform, zoomIdentity);
     }
   };
 
