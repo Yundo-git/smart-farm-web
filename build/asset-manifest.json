@@ -1,0 +1,13 @@
+{
+  "files": {
+    "main.css": "/youth-farming-dashboard-react/static/css/main.5114960b.css",
+    "main.js": "/youth-farming-dashboard-react/static/js/main.b430217e.js",
+    "index.html": "/youth-farming-dashboard-react/index.html",
+    "main.5114960b.css.map": "/youth-farming-dashboard-react/static/css/main.5114960b.css.map",
+    "main.b430217e.js.map": "/youth-farming-dashboard-react/static/js/main.b430217e.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.5114960b.css",
+    "static/js/main.b430217e.js"
+  ]
+}
