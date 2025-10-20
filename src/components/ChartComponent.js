@@ -74,14 +74,14 @@ const TabButton = styled.button`
   padding: 8px 16px;
   border: none;
   border-radius: 20px;
-  background: ${(props) => (props.active ? "#667eea" : "#e9ecef")};
-  color: ${(props) => (props.active ? "white" : "#666")};
+  background: ${(props) => (props.$active ? "#667eea" : "#e9ecef")};
+  color: ${(props) => (props.$active ? "white" : "#666")};
   cursor: pointer;
   transition: all 0.3s ease;
   font-size: 0.9rem;
 
   &:hover {
-    background: ${(props) => (props.active ? "#5a6fd8" : "#dee2e6")};
+    background: ${(props) => (props.$active ? "#5a6fd8" : "#dee2e6")};
   }
 
   @media (max-width: 768px) {
@@ -328,25 +328,25 @@ const ChartComponent = ({ regionData, modelInfo }) => {
     <ChartContainer>
       <TabContainer>
         <TabButton
-          active={activeTab === "settlement"}
+          $active={activeTab === "settlement"}
           onClick={() => setActiveTab("settlement")}
         >
           정착률 순위
         </TabButton>
         <TabButton
-          active={activeTab === "importance"}
+          $active={activeTab === "importance"}
           onClick={() => setActiveTab("importance")}
         >
           성공 요인
         </TabButton>
         <TabButton
-          active={activeTab === "failure"}
+          $active={activeTab === "failure"}
           onClick={() => setActiveTab("failure")}
         >
           실패 요인
         </TabButton>
         <TabButton
-          active={activeTab === "trend"}
+          $active={activeTab === "trend"}
           onClick={() => setActiveTab("trend")}
         >
           추이 분석
