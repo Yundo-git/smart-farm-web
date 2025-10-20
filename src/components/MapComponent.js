@@ -18,12 +18,18 @@ const MapContainerStyled = styled.div`
   border-radius: 10px;
   overflow: hidden;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  min-width: 0; // 그리드 내에서 잘리지 않도록 설정
 
   .leaflet-container {
     height: 100%;
     width: 100%;
   }
 
+  @media (max-width: 1200px) {
+    height: 450px;
+  }
+  
   @media (max-width: 768px) {
     height: 400px;
   }
@@ -151,17 +157,35 @@ const MapComponent = ({ regionData }) => {
     );
   }
 
+  // 한국 경계 좌표 (위도, 경도)
+  const southWest = L.latLng(32.0, 124.0);
+  const northEast = L.latLng(39.0, 132.0);
+  const bounds = L.latLngBounds(southWest, northEast);
+  const maxBounds = L.latLngBounds(
+    L.latLng(32.0, 124.0),
+    L.latLng(39.0, 132.0)
+  );
+
   return (
     <MapContainerStyled>
       <MapContainer
         center={[36.5, 127.8]}
         zoom={7}
+        minZoom={7}
+        maxZoom={12}
+        maxBounds={maxBounds}
+        maxBoundsViscosity={1.0}
         ref={mapRef}
         style={{ height: "100%", width: "100%" }}
+        zoomControl={false}
+        scrollWheelZoom={true}
+        worldCopyJump={false}
       >
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          bounds={bounds}
+          noWrap={true}
         />
 
         {regionData.map((region, index) => {
