@@ -1,320 +1,293 @@
-import React, { useState, useEffect } from "react";
-import styled from "styled-components";
+//ai로 생성된 코드 지금 데이터 들어가있는거 다 임시 데이터임 우리가 분석한거로 수정 필요
 
-const SimulatorContainer = styled.div`
-  background: #f8f9fa;
-  border-radius: 10px;
-  padding: 25px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-`;
+import  { useState, useEffect, useMemo } from 'react';
+import '../styles/prediction.css';
 
-const ControlsGrid = styled.div`
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 20px;
-  margin-bottom: 30px;
+// =========================================================================
+// MOCK DATA (region_settlement_data_updated.json 파일 대체)
+// region_name: "시/도 시군구" 형식
+// policy_satisfaction: '높음', '중간', '낮음'을 가정
+// =========================================================================
+const MOCK_REGIONS = [
+  //top 5지역 리스트 넣기기
+  { region_name: '강원도 양구군', settlement_rate: 95.8, youth_farmers_2023: 120, living_condition_score: 9.2, policy_satisfaction: '높음', region_type: '시군구' },
+  { region_name: '전라남도 해남군', settlement_rate: 93.1, youth_farmers_2023: 150, living_condition_score: 8.9, policy_satisfaction: '높음', region_type: '시군구' },
+  { region_name: '경상북도 상주시', settlement_rate: 91.5, youth_farmers_2023: 135, living_condition_score: 8.5, policy_satisfaction: '높음', region_type: '시군구' },
+  { region_name: '충청남도 부여군', settlement_rate: 90.2, youth_farmers_2023: 115, living_condition_score: 8.0, policy_satisfaction: '중간', region_type: '시군구' },
+  { region_name: '경기도 이천시', settlement_rate: 89.9, youth_farmers_2023: 105, living_condition_score: 8.3, policy_satisfaction: '높음', region_type: '시군구' },
 
-  @media (max-width: 768px) {
-    grid-template-columns: 1fr;
-    gap: 15px;
-  }
-`;
+  //bottom 5지역 리스트 넣기
+  { region_name: '경기도 수원시', settlement_rate: 78.5, youth_farmers_2023: 90, living_condition_score: 7.5, policy_satisfaction: '중간', region_type: '시군구' },
+  { region_name: '경기도 용인시', settlement_rate: 75.0, youth_farmers_2023: 80, living_condition_score: 7.0, policy_satisfaction: '중간', region_type: '시군구' },
+  { region_name: '제주특별자치도 제주시', settlement_rate: 82.1, youth_farmers_2023: 75, living_condition_score: 7.8, policy_satisfaction: '중간', region_type: '시군구' },
+  { region_name: '서울특별시 강동구', settlement_rate: 60.5, youth_farmers_2023: 50, living_condition_score: 5.5, policy_satisfaction: '낮음', region_type: '시군구' },
+  { region_name: '경상남도 창원시', settlement_rate: 72.3, youth_farmers_2023: 60, living_condition_score: 6.8, policy_satisfaction: '중간', region_type: '시군구' },
+  { region_name: '충청남도 홍성군', settlement_rate: 65.3, youth_farmers_2023: 55, living_condition_score: 6.1, policy_satisfaction: '낮음', region_type: '시군구' },
+];
 
-const ControlGroup = styled.div`
-  background: white;
-  padding: 20px;
-  border-radius: 8px;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+// =========================================================================
+// EMOJI ICONS (사용자 코드 유지)
+// =========================================================================
+const BarChart3 = () => <span>📊</span>;
+const CheckCircle = () => <span>✅</span>;
+const TrendingUp = () => <span>📈</span>;
+const Target = () => <span>🎯</span>;
+const MapPin = () => <span>📍</span>; // MapPin 추가
 
-  .label {
-    display: block;
-    font-weight: bold;
-    color: #333;
-    margin-bottom: 10px;
-    font-size: 0.95rem;
-  }
+// =========================================================================
+// UI Components
+// =========================================================================
 
-  .value-display {
-    text-align: center;
-    font-size: 1.1rem;
-    font-weight: bold;
-    color: #667eea;
-    margin-bottom: 10px;
-  }
-
-  .slider {
-    width: 100%;
-    height: 6px;
-    border-radius: 3px;
-    background: #ddd;
-    outline: none;
-    -webkit-appearance: none;
-
-    &::-webkit-slider-thumb {
-      -webkit-appearance: none;
-      appearance: none;
-      width: 20px;
-      height: 20px;
-      border-radius: 50%;
-      background: #667eea;
-      cursor: pointer;
-      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
-    }
-
-    &::-moz-range-thumb {
-      width: 20px;
-      height: 20px;
-      border-radius: 50%;
-      background: #667eea;
-      cursor: pointer;
-      border: none;
-      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
-    }
-  }
-
-  .range-info {
-    display: flex;
-    justify-content: space-between;
-    font-size: 0.8rem;
-    color: #666;
-    margin-top: 5px;
-  }
-`;
-
-const ResultPanel = styled.div`
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  padding: 25px;
-  border-radius: 10px;
-  text-align: center;
-  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
-
-  .title {
-    font-size: 1.3rem;
-    margin-bottom: 15px;
-    font-weight: bold;
-  }
-
-  .prediction {
-    font-size: 3rem;
-    font-weight: bold;
-    margin: 15px 0;
-    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
-  }
-
-  .confidence {
-    font-size: 1rem;
-    opacity: 0.9;
-    margin-bottom: 10px;
-  }
-
-  .interpretation {
-    font-size: 0.9rem;
-    opacity: 0.8;
-    line-height: 1.4;
-    margin-top: 15px;
-    padding-top: 15px;
-    border-top: 1px solid rgba(255, 255, 255, 0.3);
-  }
-`;
-
-const ResetButton = styled.button`
-  background: #4caf50;
-  color: white;
-  border: none;
-  padding: 10px 20px;
-  border-radius: 20px;
-  cursor: pointer;
-  font-weight: bold;
-  transition: background 0.3s ease;
-  margin-top: 15px;
-
-  &:hover {
-    background: #45a049;
-  }
-`;
-
-const PredictionSimulator = ({ modelInfo }) => {
-  // 시뮬레이터 변수들
-  const [variables, setVariables] = useState({
-    youth_farmers_2021: 50,
-    youth_farmers_2022: 60,
-    youth_farmers_2023: 70,
-    farming_support_participants: 30,
-    infrastructure_level: 7,
-    living_condition_score: 7,
-    policy_satisfaction: 7,
-  });
-
-  const [predictedRate, setPredictedRate] = useState(75.0);
-
-  // 변수 범위 정의
-  const variableRanges = {
-    farming_support_participants: {
-      min: 0,
-      max: 100,
-      step: 1,
-      unit: "명",
-      label: "영농정착지원사업 참여자",
-    },
-    infrastructure_level: {
-      min: 1,
-      max: 10,
-      step: 0.1,
-      unit: "점",
-      label: "인프라 수준",
-    },
-    living_condition_score: {
-      min: 1,
-      max: 10,
-      step: 0.1,
-      unit: "점",
-      label: "정주여건 점수",
-    },
-    policy_satisfaction: {
-      min: 1,
-      max: 10,
-      step: 0.1,
-      unit: "점",
-      label: "정책지원 만족도",
-    },
-  };
-
-  // 예측 모델 (간단한 가중합 방식)
-  const calculatePrediction = (vars) => {
-    // 모델 정보에서 중요도 가져오기
-    const importanceMap = {};
-    if (modelInfo.feature_importance) {
-      modelInfo.feature_importance.forEach((item) => {
-        importanceMap[item.feature] = item.importance;
-      });
-    }
-
-    // 기본 가중치 (feature_importance가 없을 경우)
-    const weights = {
-      youth_farmers_2021: importanceMap["2021_귀농청년수"] || 0.056,
-      youth_farmers_2022: importanceMap["2022_귀농청년수"] || 0.089,
-      youth_farmers_2023: importanceMap["2023_귀농청년수"] || 0.205,
-      farming_support_participants:
-        importanceMap["영농정착지원사업참여자_2023"] || 0.272,
-      infrastructure_level: importanceMap["인프라수준_숫자"] || 0.033,
-      living_condition_score: importanceMap["정주여건점수_숫자"] || 0.156,
-      policy_satisfaction: importanceMap["정책지원만족도_숫자"] || 0.189,
-    };
-
-    // 정규화된 값들 계산
-    const normalizedValues = {
-      youth_farmers_2021: Math.min(vars.youth_farmers_2021 / 100, 1),
-      youth_farmers_2022: Math.min(vars.youth_farmers_2022 / 100, 1),
-      youth_farmers_2023: Math.min(vars.youth_farmers_2023 / 100, 1),
-      farming_support_participants: Math.min(
-        vars.farming_support_participants / 50,
-        1
-      ),
-      infrastructure_level: vars.infrastructure_level / 10,
-      living_condition_score: vars.living_condition_score / 10,
-      policy_satisfaction: vars.policy_satisfaction / 10,
-    };
-
-    // 가중합 계산
-    let prediction = 60; // 기본값
-    Object.keys(weights).forEach((key) => {
-      prediction += normalizedValues[key] * weights[key] * 40; // 스케일링
-    });
-
-    return Math.max(30, Math.min(95, prediction)); // 30-95% 범위로 제한
-  };
-
-  // 변수 변경 핸들러
-  const handleVariableChange = (variable, value) => {
-    const newVariables = { ...variables, [variable]: parseFloat(value) };
-    setVariables(newVariables);
-    setPredictedRate(calculatePrediction(newVariables));
-  };
-
-  // 초기값으로 리셋
-  const resetToDefaults = () => {
-    const defaultVars = {
-      youth_farmers_2021: 50,
-      youth_farmers_2022: 60,
-      youth_farmers_2023: 70,
-      farming_support_participants: 30,
-      infrastructure_level: 7,
-      living_condition_score: 7,
-      policy_satisfaction: 7,
-    };
-    setVariables(defaultVars);
-    setPredictedRate(calculatePrediction(defaultVars));
-  };
-
-  // 예측값에 따른 해석
-  const getInterpretation = (rate) => {
-    if (rate >= 85)
-      return "🌟 매우 우수한 정착률입니다. 현재 정책을 유지하고 확대하는 것이 좋습니다.";
-    if (rate >= 80)
-      return "✅ 우수한 정착률입니다. 추가적인 개선을 통해 더 나은 결과를 기대할 수 있습니다.";
-    if (rate >= 75)
-      return "📈 양호한 정착률입니다. 핵심 요인들을 강화하면 더 좋은 성과를 낼 수 있습니다.";
-    if (rate >= 70) return "⚠️ 평균적인 정착률입니다. 정책 개선이 필요합니다.";
-    return "🚨 정착률이 낮습니다. 종합적인 정책 개선과 지원 확대가 시급합니다.";
-  };
-
-  // useEffect(() => {
-  //   setPredictedRate(calculatePrediction(variables));
-  // }, [modelInfo]);
-
-  useEffect(() => {
-    setPredictedRate(calculatePrediction(variables));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [modelInfo]);
-
+const LevelFilterDropdown = ({ label, value, options, onSelect, disabled = false }) => {
   return (
-    <SimulatorContainer>
-      <ControlsGrid>
-        {Object.entries(variableRanges).map(([key, config]) => (
-          <ControlGroup key={key}>
-            <label className="label">{config.label}</label>
-            <div className="value-display">
-              {variables[key]} {config.unit}
-            </div>
-            <input
-              type="range"
-              className="slider"
-              min={config.min}
-              max={config.max}
-              step={config.step}
-              value={variables[key]}
-              onChange={(e) => handleVariableChange(key, e.target.value)}
-            />
-            <div className="range-info">
-              <span>
-                {config.min}
-                {config.unit}
-              </span>
-              <span>
-                {config.max}
-                {config.unit}
-              </span>
-            </div>
-          </ControlGroup>
+    <div className="filter-group">
+      <label className="filter-label">{label}</label>
+      <select
+        value={value}
+        onChange={(e) => onSelect(e.target.value)}
+        className="filter-select"
+        disabled={disabled}
+      >
+        <option value="">{`전체 ${label}`}</option>
+        {options.map(option => (
+          <option key={option} value={option}>
+            {option}
+          </option>
         ))}
-      </ControlsGrid>
-
-      <ResultPanel>
-        <div className="title">🎯 예측된 정착률</div>
-        <div className="prediction">{predictedRate.toFixed(1)}%</div>
-        <div className="confidence">
-          모델 정확도:{" "}
-          {modelInfo.model_performance
-            ? (modelInfo.model_performance.r2_score * 100).toFixed(1)
-            : "96.5"}
-          %
-        </div>
-        <div className="interpretation">{getInterpretation(predictedRate)}</div>
-        <ResetButton onClick={resetToDefaults}>🔄 기본값으로 리셋</ResetButton>
-      </ResultPanel>
-    </SimulatorContainer>
+      </select>
+    </div>
   );
 };
 
-export default PredictionSimulator;
+const ComparisonCard = ({ title, currentValue, benchmarkValue, unit, icon: Icon }) => {
+  // 사용자의 로직 유지: 점수형 지표는 10점 만점 기준으로, 나머지는 벤치마크 값에 여유를 둔 기준으로
+  const isScore = title.includes('점');
+  const maxValue = isScore ? 10 : Math.max(currentValue, benchmarkValue) * 1.2;
+  
+  // 현재 값이 벤치마크의 80% 미만이면 낮은 것으로 판단 (시각적 경고)
+  const isLow = currentValue < benchmarkValue * 0.8;
+  const progressFillClass = isLow ? 'progress-fill current low' : 'progress-fill current';
+
+  return (
+    <div className="comparison-card">
+      <div className="card-header">
+        <div className="card-title">
+          <Icon />
+          <h3 className="text-lg font-semibold">{title}</h3>
+        </div>
+      </div>
+      <div className="card-body">
+        <div className="metric-row">
+          <span className="metric-label">선택 지역</span>
+          <span className="metric-value">
+            {isScore ? currentValue.toFixed(1) : currentValue.toLocaleString()}{unit}
+          </span>
+          <div className="progress-bar">
+            <div 
+              className={progressFillClass}
+              style={{ width: `${(currentValue / maxValue) * 100}%` }}
+            ></div>
+          </div>
+        </div>
+        <div className="metric-row">
+          <span className="metric-label benchmark-label">선도 지역</span>
+          <span className="metric-value benchmark">
+            {isScore ? benchmarkValue.toFixed(1) : benchmarkValue.toLocaleString()}{unit}
+          </span>
+          <div className="progress-bar">
+            <div 
+              className="progress-fill benchmark" 
+              style={{ width: `${(benchmarkValue / maxValue) * 100}%` }}
+            ></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// =========================================================================
+// Main App Component (renamed from PredictionSimulator)
+// =========================================================================
+
+const App = () => {
+  const regions = MOCK_REGIONS;
+  const [selectedSido, setSelectedSido] = useState('');
+  const [selectedSigungu, setSelectedSigungu] = useState('');
+  const [selectedRegion, setSelectedRegion] = useState(null);
+
+  // 1. Get unique Sido options
+  const sidoOptions = useMemo(() => {
+    // region_name의 첫 번째 단어 (예: '강원도', '경기도')를 추출
+    const sidos = new Set(regions.map(region => region.region_name.split(' ')[0]));
+    return Array.from(sidos).sort();
+  }, [regions]);
+
+  // 2. Get Sigungu options based on selected Sido
+  const sigunguOptions = useMemo(() => {
+    if (!selectedSido) return [];
+    
+    // 선택된 시/도로 시작하는 지역의 두 번째 단어 (시군구)를 추출
+    return regions
+      .filter(region => region.region_name.startsWith(selectedSido))
+      .map(region => {
+        const parts = region.region_name.split(' ');
+        return parts.length > 1 ? parts[1] : ''; // 두 번째 단어가 시군구
+      })
+      .filter((value, index, self) => value && self.indexOf(value) === index)
+      .sort();
+  }, [selectedSido, regions]);
+
+  // 3. Get top 5 regions by settlement rate (선도 지역 그룹)
+  const topRegions = useMemo(() => {
+    return [...regions]
+      .sort((a, b) => b.settlement_rate - a.settlement_rate)
+      .slice(0, 5);
+  }, [regions]);
+
+  // 4. Set selected region when Sido and Sigungu are selected
+  useEffect(() => {
+    if (selectedSido && selectedSigungu) {
+      // 선택된 시/도 + 시군구 이름을 가진 지역을 찾음
+      const foundRegion = regions.find(
+        region => 
+          region.region_name === `${selectedSido} ${selectedSigungu}` &&
+          region.region_type === '시군구'
+      );
+      setSelectedRegion(foundRegion || null);
+    } else {
+      setSelectedRegion(null);
+    }
+  }, [selectedSido, selectedSigungu, regions]);
+
+  // 5. Calculate benchmark values (average of top 5)
+  const benchmarkValues = useMemo(() => {
+    if (topRegions.length === 0) return null;
+    
+    // 정책 만족도 문자열을 숫자로 변환하는 사용자 정의 로직 유지
+    const scoreMap = { '높음': 9, '중간': 7, '낮음': 5 };
+
+    return {
+      settlement_rate: topRegions.reduce((sum, r) => sum + r.settlement_rate, 0) / topRegions.length,
+      youth_farmers_2023: topRegions.reduce((sum, r) => sum + (r.youth_farmers_2023 || 0), 0) / topRegions.length,
+      living_condition_score: topRegions.reduce((sum, r) => sum + (r.living_condition_score || 0), 0) / topRegions.length,
+      policy_satisfaction: topRegions.reduce((sum, r) => {
+        const score = scoreMap[r.policy_satisfaction] || 5; // 점수 변환
+        return sum + score;
+      }, 0) / topRegions.length
+    };
+  }, [topRegions]);
+  
+  const selectedPolicyScore = useMemo(() => {
+    const scoreMap = { '높음': 9, '중간': 7, '낮음': 5 };
+    if (!selectedRegion) return 0;
+    return scoreMap[selectedRegion.policy_satisfaction] || 5;
+  }, [selectedRegion]);
+
+
+  if (regions.length === 0) {
+    return <div className="loading">데이터 로딩 오류: 지역 데이터가 없습니다.</div>;
+  }
+
+  return (
+    <>
+    
+      
+      {/* ========================================================================= */}
+      {/* React Component JSX */}
+      {/* ========================================================================= */}
+
+      <div className="prediction-container">
+        <header className="header">
+          <h1>청년 귀농 정착률 분석 대시보드</h1>
+          <p>지역별 정착률과 핵심 지표를 비교 분석하고, 선도 지역의 평균값을 벤치마킹합니다.</p>
+        </header>
+
+        <div className="filter-section">
+          <LevelFilterDropdown
+            label="시/도 선택"
+            value={selectedSido}
+            options={sidoOptions}
+            onSelect={(value) => {
+              setSelectedSido(value);
+              setSelectedSigungu(''); // 시/도 변경 시 시군구 초기화
+            }}
+          />
+          <LevelFilterDropdown
+            label="시군구 선택"
+            value={selectedSigungu}
+            options={sigunguOptions}
+            onSelect={setSelectedSigungu}
+            disabled={!selectedSido}
+          />
+        </div>
+
+        {selectedRegion && benchmarkValues ? (
+          <div className="dashboard">
+            <div className="region-info">
+              <div className="selected-region">
+                <h2>선택 지역: {selectedRegion.region_name}</h2>
+                <div className="settlement-rate">
+                  <span className="rate-value">{selectedRegion.settlement_rate.toFixed(1)}%</span>
+                  <span className="rate-label">예측 정착률</span>
+                  <MapPin />
+                </div>
+              </div>
+              <div className="top-regions">
+                <h3>정착률 TOP 5 지역 (선도 지역 평균)</h3>
+                <ul>
+                  {topRegions.map((region, index) => (
+                    <li key={region.region_name} className={region.region_name === selectedRegion.region_name ? 'active' : ''}>
+                      {index + 1}. {region.region_name} ({region.settlement_rate.toFixed(1)}%)
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+
+            <div className="metrics-grid">
+              <ComparisonCard
+                title="예측 정착률"
+                currentValue={selectedRegion.settlement_rate}
+                benchmarkValue={benchmarkValues.settlement_rate}
+                unit="%"
+                icon={Target}
+              />
+              <ComparisonCard
+                title="청년 농업인 수 (2023)"
+                currentValue={selectedRegion.youth_farmers_2023 || 0}
+                benchmarkValue={Math.round(benchmarkValues.youth_farmers_2023)}
+                unit="명"
+                icon={BarChart3}
+              />
+              <ComparisonCard
+                title="정주여건 점수"
+                currentValue={selectedRegion.living_condition_score || 0}
+                benchmarkValue={benchmarkValues.living_condition_score}
+                unit="점"
+                icon={CheckCircle}
+              />
+              <ComparisonCard
+                title="정책 만족도"
+                currentValue={selectedPolicyScore}
+                benchmarkValue={benchmarkValues.policy_satisfaction}
+                unit="점"
+                icon={TrendingUp}
+              />
+            </div>
+          </div>
+        ) : selectedSido ? (
+          <div className="no-region-selected">
+            <p>시군구를 선택하여 해당 지역의 상세 분석 정보를 확인하세요.</p>
+          </div>
+        ) : (
+          <div className="select-sido-prompt">
+            <p>시/도를 선택하여 지역별 정착률 분석을 시작하세요.</p>
+          </div>
+        )}
+      </div>
+    </>
+  );
+};
+
+export default App;

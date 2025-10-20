@@ -25,7 +25,7 @@ export const useData = () => {
         try {
           // 지역 정착률 데이터 로드
           const regionResponse = await axios.get(
-            `${baseUrl}/region_settlement_data.json?t=${timestamp}`,
+            `${baseUrl}/region_settlement_data_updated.json?t=${timestamp}`,
             {
               headers: {
                 "Cache-Control": "no-cache, no-store, must-revalidate",

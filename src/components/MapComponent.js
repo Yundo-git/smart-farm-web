@@ -16,14 +16,29 @@ L.Icon.Default.mergeOptions({
 const MapContainerStyled = styled.div`
   height: 500px;
   border-radius: 10px;
-  overflow: hidden;
+  overflow: visible; /* Changed from hidden to visible to allow popups to overflow */
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
   width: 100%;
   min-width: 0; // 그리드 내에서 잘리지 않도록 설정
+  position: relative; /* Add position relative for proper popup positioning */
 
   .leaflet-container {
     height: 100%;
     width: 100%;
+  }
+  
+  /* Ensure popup is fully visible */
+  .leaflet-popup {
+    margin-bottom: 20px; /* Add margin to prevent bottom cut-off */
+  }
+  
+  .leaflet-popup-content-wrapper {
+    border-radius: 8px;
+    box-shadow: 0 3px 14px rgba(0,0,0,0.2);
+  }
+  
+  .leaflet-popup-tip-container {
+    margin-top: -1px;
   }
 
   @media (max-width: 1200px) {
@@ -36,7 +51,8 @@ const MapContainerStyled = styled.div`
 `;
 
 const PopupContent = styled.div`
-  min-width: 200px;
+  min-width: 220px;
+  max-width: 300px; /* Add max-width to prevent popup from becoming too wide */
   font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
 
   .region-title {

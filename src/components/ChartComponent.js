@@ -54,10 +54,10 @@ const ChartSection = styled.div`
 
   .chart-wrapper {
     position: relative;
-    height: 300px;
+    height: 400px;
 
     @media (max-width: 768px) {
-      height: 250px;
+      height: 350px;
     }
   }
 `;
@@ -116,34 +116,130 @@ const ChartComponent = ({ regionData, modelInfo }) => {
     },
   };
 
-  // 정착률 상위 10개 지역 차트 데이터
-  const getTopRegionsData = () => {
-    const topRegions = [...regionData]
-      .sort((a, b) => b.settlement_rate - a.settlement_rate)
-      .slice(0, 10);
+  // 가로 막대 차트 데이터 (상위/하위 비교)
+  const getTopBottomRegionsData = () => {
+    // 1. "전국" 데이터를 필터링하여 순위 비교에서 제외
+    const filteredRegions = regionData.filter(
+      (region) => region.region_name !== "전국"
+    );
+
+    // 2. 정착률 기준으로 내림차순 정렬 (높은 순)
+    const sortedRegions = [...filteredRegions].sort(
+      (a, b) => b.settlement_rate - a.settlement_rate
+    );
+
+    // 데이터가 최소 5개 미만이면 차트 표시 불가
+    if (sortedRegions.length < 5) {
+        return {
+            labels: sortedRegions.map(r => r.region_name),
+            datasets: [{
+                label: "정착률 (%)",
+                data: sortedRegions.map(r => r.settlement_rate),
+                backgroundColor: "#66BB6A",
+                borderColor: "#fff",
+                borderWidth: 2,
+            }]
+        };
+    }
+
+    // 3. 상위 5개와 하위 5개 선택
+    const topRegions = sortedRegions.slice(0, 5);
+    
+    let bottomRegions = [];
+    if (sortedRegions.length >= 10) {
+        // 데이터가 충분하면 하위 5개 선택 및 오름차순으로 역순 배열
+        bottomRegions = sortedRegions.slice(-5).reverse();
+    } else {
+        // 5개 이상 10개 미만인 경우, 상위 5개를 제외한 나머지를 하위 지역으로 간주하고 역순 배열
+        bottomRegions = sortedRegions.slice(5).reverse();
+    }
+    
+    // 4. 합치기 (상위 5개 + 하위 (최대) 5개)
+    const combinedRegions = [...topRegions, ...bottomRegions];
 
     return {
-      labels: topRegions.map((region) => region.region_name),
+      labels: combinedRegions.map((region) => region.region_name),
       datasets: [
         {
           label: "정착률 (%)",
-          data: topRegions.map((region) => region.settlement_rate),
-          backgroundColor: topRegions.map((region) => {
-            if (region.settlement_rate >= 85) return "#4CAF50";
-            if (region.settlement_rate >= 80) return "#8BC34A";
-            if (region.settlement_rate >= 75) return "#FFC107";
-            return "#FF9800";
+          data: combinedRegions.map((region) => region.settlement_rate),
+          backgroundColor: combinedRegions.map((region, index) => {
+            // 상위 그룹 (topRegions.length)까지는 초록색 계열
+            if (index < topRegions.length) {
+              if (region.settlement_rate >= 87) return "#2E7D32"; // 진한 초록
+              if (region.settlement_rate >= 85) return "#4CAF50"; // 초록
+              return "#66BB6A"; // 연한 초록
+            }
+            // 하위 그룹 (빨강/주황 계열)
+            else {
+              if (region.settlement_rate < 30) return "#D32F2F"; // 정착률이 매우 낮은 지역은 진한 빨강
+              if (region.settlement_rate < 40) return "#F44336"; // 빨강
+              return "#FF9800"; // 주황
+            }
           }),
-          borderColor: "#333",
-          borderWidth: 1,
+          borderColor: "#fff",
+          borderWidth: 2,
         },
       ],
     };
   };
 
+  // 가로 막대 차트 옵션
+  const horizontalBarOptions = {
+    indexAxis: "y", // 가로 방향으로 변경
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        display: false,
+      },
+      tooltip: {
+        backgroundColor: "rgba(0, 0, 0, 0.8)",
+        titleColor: "white",
+        bodyColor: "white",
+        borderColor: "#667eea",
+        borderWidth: 1,
+        callbacks: {
+          label: function (context) {
+            return `정착률: ${context.parsed.x.toFixed(1)}%`;
+          },
+        },
+      },
+    },
+    scales: {
+      x: {
+        beginAtZero: false,
+        // *** 수정된 부분: X축 최소값을 65에서 10으로 변경하여 낮은 값도 보이게 함 ***
+        min: 10, 
+        max: 100, // 최대값을 100%로 설정
+        title: {
+          display: true,
+          text: "정착률 (%)",
+          font: {
+            size: 14,
+            weight: "bold",
+          },
+        },
+        grid: {
+          color: "rgba(0, 0, 0, 0.05)",
+        },
+      },
+      y: {
+        grid: {
+          display: false,
+        },
+        ticks: {
+          font: {
+            size: 12,
+          },
+        },
+      },
+    },
+  };
+
   // 성공 요인 중요도 차트 데이터
   const getFeatureImportanceData = () => {
-    if (!modelInfo.feature_importance) return null;
+    if (!modelInfo || !modelInfo.feature_importance) return null;
 
     const features = modelInfo.feature_importance.slice(0, 6);
 
@@ -258,9 +354,12 @@ const ChartComponent = ({ regionData, modelInfo }) => {
       case "settlement":
         return (
           <ChartSection>
-            <h3>🏆 정착률 상위 10개 지역</h3>
+            <h3>🏆 정착률 비교: 상위 5개 지역 vs 하위 5개 지역</h3>
             <div className="chart-wrapper">
-              <Bar data={getTopRegionsData()} options={commonOptions} />
+              <Bar
+                data={getTopBottomRegionsData()}
+                options={horizontalBarOptions}
+              />
             </div>
           </ChartSection>
         );
