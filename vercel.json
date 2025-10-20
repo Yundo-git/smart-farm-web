@@ -5,40 +5,26 @@
       "src": "package.json",
       "use": "@vercel/static-build",
       "config": {
-        "distDir": "build",
-        "includeFiles": ["public/**"]
+        "distDir": "build"
       }
     }
   ],
   "routes": [
     {
-      "src": "/(.*)",
-      "dest": "/index.html"
+      "src": "/static/(.*)",
+      "dest": "/static/$1"
     },
     {
-      "src": "/(.*\.(json|js|css|png|jpg|jpeg|gif|svg|ico))",
-      "headers": {
-        "cache-control": "public, max-age=0, must-revalidate"
-      }
-    }
-  ],
-  "headers": [
+      "src": "/region_settlement_data.json",
+      "dest": "/region_settlement_data.json"
+    },
     {
-      "source": "/(.*)",
-      "headers": [
-        {
-          "key": "Cache-Control",
-          "value": "no-cache, no-store, must-revalidate"
-        },
-        {
-          "key": "Pragma",
-          "value": "no-cache"
-        },
-        {
-          "key": "Expires",
-          "value": "0"
-        }
-      ]
+      "src": "/settlement_prediction_model.json",
+      "dest": "/settlement_prediction_model.json"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/index.html"
     }
   ]
 }

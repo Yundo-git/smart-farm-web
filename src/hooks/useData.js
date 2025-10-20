@@ -12,38 +12,52 @@ export const useData = () => {
     const loadData = async () => {
       try {
         setLoading(true);
-
-        // 환경에 따라 기본 URL 설정 (Vercel 배포 시 경로 문제 해결을 위해 수정)
-        const baseUrl = process.env.PUBLIC_URL || '';
+        
+        // 프로덕션 환경에서의 기본 URL 설정
+        const isProduction = process.env.NODE_ENV === 'production';
+        const baseUrl = isProduction ? '' : process.env.PUBLIC_URL || '';
+        
+        // 캐시 방지용 타임스탬프프
+        const timestamp = new Date().getTime();
         
         try {
           // 지역 정착률 데이터 로드
-          const regionResponse = await axios.get(`${baseUrl}/region_settlement_data.json`, {
-            headers: {
-              'Cache-Control': 'no-cache, no-store, must-revalidate',
-              'Pragma': 'no-cache',
-              'Expires': '0'
+          const regionResponse = await axios.get(
+            `${baseUrl}/region_settlement_data.json?t=${timestamp}`, 
+            {
+              headers: {
+                'Cache-Control': 'no-cache, no-store, must-revalidate',
+                'Pragma': 'no-cache',
+                'Expires': '0'
+              }
             }
-          });
+          );
           var regionResult = regionResponse.data;
+          console.log('지역 데이터 로드 성공:', regionResult.length > 0 ? '데이터 있음' : '빈 데이터');
         } catch (regionError) {
           console.error("지역 데이터 로드 실패:", regionError);
-          regionResult = getDummyData(); // 더미 데이터로 대체
+          regionResult = getDummyData();
+          console.log("더미 데이터로 대체");
         }
 
         try {
           // 모델 정보 로드
-          const modelResponse = await axios.get(`${baseUrl}/settlement_prediction_model.json`, {
-            headers: {
-              'Cache-Control': 'no-cache, no-store, must-revalidate',
-              'Pragma': 'no-cache',
-              'Expires': '0'
+          const modelResponse = await axios.get(
+            `${baseUrl}/settlement_prediction_model.json?t=${timestamp}`, 
+            {
+              headers: {
+                'Cache-Control': 'no-cache, no-store, must-revalidate',
+                'Pragma': 'no-cache',
+                'Expires': '0'
+              }
             }
-          });
+          );
           var modelResult = modelResponse.data;
+          console.log('모델 데이터 로드 성공:', Object.keys(modelResult).length > 0 ? '데이터 있음' : '빈 데이터');
         } catch (modelError) {
           console.error("모델 데이터 로드 실패:", modelError);
-          modelResult = getDummyModelInfo(); // 더미 데이터로 대체
+          modelResult = getDummyModelInfo();
+          console.log("더미 모델 데이터로 대체");
         }
 
         setRegionData(regionResult);

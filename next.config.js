@@ -2,22 +2,34 @@
 const nextConfig = {
   reactStrictMode: true,
   swcMinify: true,
-  // Add basePath if your app is not served from the root
-  // basePath: '/smart-farm-web',
   // Enable static exports for SPA
   output: 'export',
-  // Optional: Add a trailing slash to all paths
+  // Add trailing slash to all paths
   trailingSlash: true,
-  // Optional: Configure image optimization
+  // Disable image optimization
   images: {
     unoptimized: true,
+    disableStaticImages: true
   },
-  // Add environment variables that should be available at build time
+  // Set environment variables
   env: {
-    PUBLIC_URL: process.env.PUBLIC_URL || '',
+    NEXT_PUBLIC_BASE_PATH: process.env.NEXT_PUBLIC_BASE_PATH || '',
   },
+  // Configure base path for static assets
+  basePath: process.env.NEXT_PUBLIC_BASE_PATH || '',
   // Custom webpack configuration
-  webpack: (config) => {
+  webpack: (config, { isServer }) => {
+    // Add file-loader for JSON files
+    config.module.rules.push({
+      test: /\.(json)$/,
+      type: 'asset/resource',
+      generator: {
+        filename: 'static/[name][ext]',
+      },
+    });
+    
+    // Important: return the modified config
+    return config;
     // Add any custom webpack configurations here
     return config;
   },
