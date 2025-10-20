@@ -13,13 +13,13 @@ export const useData = () => {
       try {
         setLoading(true);
 
-        // 지역 정착률 데이터 로드
-        const regionResponse = await axios.get("/region_settlement_data.json");
+        // 지역 정착률 데이터 로드 (process.env.PUBLIC_URL을 사용하여 올바른 경로 지정)
+        const regionResponse = await axios.get(`${process.env.PUBLIC_URL}/region_settlement_data.json`);
         const regionResult = regionResponse.data;
 
         // 모델 정보 로드
         const modelResponse = await axios.get(
-          "/settlement_prediction_model.json"
+          `${process.env.PUBLIC_URL}/settlement_prediction_model.json`
         );
         const modelResult = modelResponse.data;
 
