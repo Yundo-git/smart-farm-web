@@ -12,30 +12,33 @@ export const useData = () => {
     const loadData = async () => {
       try {
         setLoading(true);
-        
-        // GitHub Pages에서의 기본 URL 설정 (하드코딩)
-        const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-        const baseUrl = isLocal ? '' : 'https://yundo-git.github.io/smart-farm-web';
-        
+
+        // Set base URL for data files
+        // In development, use the public directory
+        // In production, use the root path
+        const baseUrl = process.env.PUBLIC_URL || '';
         console.log('Base URL:', baseUrl);
-        
+
         // 캐시 방지용 타임스탬프
         const timestamp = new Date().getTime();
-        
+
         try {
           // 지역 정착률 데이터 로드
           const regionResponse = await axios.get(
-            `${baseUrl}/region_settlement_data.json?t=${timestamp}`, 
+            `${baseUrl}/region_settlement_data.json?t=${timestamp}`,
             {
               headers: {
-                'Cache-Control': 'no-cache, no-store, must-revalidate',
-                'Pragma': 'no-cache',
-                'Expires': '0'
-              }
+                "Cache-Control": "no-cache, no-store, must-revalidate",
+                Pragma: "no-cache",
+                Expires: "0",
+              },
             }
           );
           var regionResult = regionResponse.data;
-          console.log('지역 데이터 로드 성공:', regionResult.length > 0 ? '데이터 있음' : '빈 데이터');
+          console.log(
+            "지역 데이터 로드 성공:",
+            regionResult.length > 0 ? "데이터 있음" : "빈 데이터"
+          );
         } catch (regionError) {
           console.error("지역 데이터 로드 실패:", regionError);
           regionResult = getDummyData();
@@ -45,17 +48,21 @@ export const useData = () => {
         try {
           // 모델 정보 로드
           const modelResponse = await axios.get(
-            `${baseUrl}/settlement_prediction_model.json?t=${timestamp}`, 
+            `${baseUrl}/settlement_prediction_model.json?t=${timestamp}`,
             {
               headers: {
-                'Cache-Control': 'no-cache, no-store, must-revalidate',
-                'Pragma': 'no-cache',
-                'Expires': '0'
-              }
+                "Cache-Control": "no-cache, no-store, must-revalidate",
+                Pragma: "no-cache",
+
+                Expires: "0",
+              },
             }
           );
           var modelResult = modelResponse.data;
-          console.log('모델 데이터 로드 성공:', Object.keys(modelResult).length > 0 ? '데이터 있음' : '빈 데이터');
+          console.log(
+            "모델 데이터 로드 성공:",
+            Object.keys(modelResult).length > 0 ? "데이터 있음" : "빈 데이터"
+          );
         } catch (modelError) {
           console.error("모델 데이터 로드 실패:", modelError);
           modelResult = getDummyModelInfo();
