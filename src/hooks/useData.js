@@ -13,28 +13,38 @@ export const useData = () => {
       try {
         setLoading(true);
 
-        // 환경에 따라 기본 URL 설정
-        const baseUrl = process.env.NODE_ENV === 'development' ? '' : '';
+        // 환경에 따라 기본 URL 설정 (Vercel 배포 시 경로 문제 해결을 위해 수정)
+        const baseUrl = process.env.PUBLIC_URL || '';
         
-        // 지역 정착률 데이터 로드
-        const regionResponse = await axios.get(`${baseUrl}/region_settlement_data.json`, {
-          headers: {
-            'Cache-Control': 'no-cache',
-            'Pragma': 'no-cache',
-            'Expires': '0'
-          }
-        });
-        const regionResult = regionResponse.data;
+        try {
+          // 지역 정착률 데이터 로드
+          const regionResponse = await axios.get(`${baseUrl}/region_settlement_data.json`, {
+            headers: {
+              'Cache-Control': 'no-cache, no-store, must-revalidate',
+              'Pragma': 'no-cache',
+              'Expires': '0'
+            }
+          });
+          var regionResult = regionResponse.data;
+        } catch (regionError) {
+          console.error("지역 데이터 로드 실패:", regionError);
+          regionResult = getDummyData(); // 더미 데이터로 대체
+        }
 
-        // 모델 정보 로드
-        const modelResponse = await axios.get(`${baseUrl}/settlement_prediction_model.json`, {
-          headers: {
-            'Cache-Control': 'no-cache',
-            'Pragma': 'no-cache',
-            'Expires': '0'
-          }
-        });
-        const modelResult = modelResponse.data;
+        try {
+          // 모델 정보 로드
+          const modelResponse = await axios.get(`${baseUrl}/settlement_prediction_model.json`, {
+            headers: {
+              'Cache-Control': 'no-cache, no-store, must-revalidate',
+              'Pragma': 'no-cache',
+              'Expires': '0'
+            }
+          });
+          var modelResult = modelResponse.data;
+        } catch (modelError) {
+          console.error("모델 데이터 로드 실패:", modelError);
+          modelResult = getDummyModelInfo(); // 더미 데이터로 대체
+        }
 
         setRegionData(regionResult);
         setModelInfo(modelResult);
