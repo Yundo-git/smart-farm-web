@@ -13,11 +13,13 @@ export const useData = () => {
       try {
         setLoading(true);
         
-        // 프로덕션 환경에서의 기본 URL 설정
-        const isProduction = process.env.NODE_ENV === 'production';
-        const baseUrl = isProduction ? '' : process.env.PUBLIC_URL || '';
+        // GitHub Pages에서의 기본 URL 설정 (하드코딩)
+        const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+        const baseUrl = isLocal ? '' : 'https://yundo-git.github.io/smart-farm-web';
         
-        // 캐시 방지용 타임스탬프프
+        console.log('Base URL:', baseUrl);
+        
+        // 캐시 방지용 타임스탬프
         const timestamp = new Date().getTime();
         
         try {

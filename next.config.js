@@ -11,12 +11,9 @@ const nextConfig = {
     unoptimized: true,
     disableStaticImages: true
   },
-  // Set environment variables
-  env: {
-    NEXT_PUBLIC_BASE_PATH: process.env.NEXT_PUBLIC_BASE_PATH || '',
-  },
-  // Configure base path for static assets
-  basePath: process.env.NEXT_PUBLIC_BASE_PATH || '',
+  // No environment variables needed
+  // Remove basePath to use root path
+  assetPrefix: '.',
   // Custom webpack configuration
   webpack: (config, { isServer }) => {
     // Add file-loader for JSON files

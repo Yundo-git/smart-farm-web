@@ -1,13 +1,13 @@
 {
   "files": {
-    "main.css": "/youth-farming-dashboard-react/static/css/main.5114960b.css",
-    "main.js": "/youth-farming-dashboard-react/static/js/main.218bf01a.js",
-    "index.html": "/youth-farming-dashboard-react/index.html",
-    "main.5114960b.css.map": "/youth-farming-dashboard-react/static/css/main.5114960b.css.map",
-    "main.218bf01a.js.map": "/youth-farming-dashboard-react/static/js/main.218bf01a.js.map"
+    "main.css": "./static/css/main.5114960b.css",
+    "main.js": "./static/js/main.fc39b2d4.js",
+    "index.html": "./index.html",
+    "main.5114960b.css.map": "./static/css/main.5114960b.css.map",
+    "main.fc39b2d4.js.map": "./static/js/main.fc39b2d4.js.map"
   },
   "entrypoints": [
     "static/css/main.5114960b.css",
-    "static/js/main.218bf01a.js"
+    "static/js/main.fc39b2d4.js"
   ]
 }
