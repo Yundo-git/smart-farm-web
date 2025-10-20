@@ -13,14 +13,27 @@ export const useData = () => {
       try {
         setLoading(true);
 
-        // 지역 정착률 데이터 로드 (process.env.PUBLIC_URL을 사용하여 올바른 경로 지정)
-        const regionResponse = await axios.get(`${process.env.PUBLIC_URL}/region_settlement_data.json`);
+        // 환경에 따라 기본 URL 설정
+        const baseUrl = process.env.NODE_ENV === 'development' ? '' : '';
+        
+        // 지역 정착률 데이터 로드
+        const regionResponse = await axios.get(`${baseUrl}/region_settlement_data.json`, {
+          headers: {
+            'Cache-Control': 'no-cache',
+            'Pragma': 'no-cache',
+            'Expires': '0'
+          }
+        });
         const regionResult = regionResponse.data;
 
         // 모델 정보 로드
-        const modelResponse = await axios.get(
-          `${process.env.PUBLIC_URL}/settlement_prediction_model.json`
-        );
+        const modelResponse = await axios.get(`${baseUrl}/settlement_prediction_model.json`, {
+          headers: {
+            'Cache-Control': 'no-cache',
+            'Pragma': 'no-cache',
+            'Expires': '0'
+          }
+        });
         const modelResult = modelResponse.data;
 
         setRegionData(regionResult);
