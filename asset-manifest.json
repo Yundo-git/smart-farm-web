@@ -1,13 +1,13 @@
 {
   "files": {
-    "main.css": "/smart-farm-web/static/css/main.5114960b.css",
-    "main.js": "/smart-farm-web/static/js/main.8a2b8cf3.js",
-    "index.html": "/smart-farm-web/index.html",
-    "main.5114960b.css.map": "/smart-farm-web/static/css/main.5114960b.css.map",
-    "main.8a2b8cf3.js.map": "/smart-farm-web/static/js/main.8a2b8cf3.js.map"
+    "main.css": "./static/css/main.5114960b.css",
+    "main.js": "./static/js/main.1625a85d.js",
+    "index.html": "./index.html",
+    "main.5114960b.css.map": "./static/css/main.5114960b.css.map",
+    "main.1625a85d.js.map": "./static/js/main.1625a85d.js.map"
   },
   "entrypoints": [
     "static/css/main.5114960b.css",
-    "static/js/main.8a2b8cf3.js"
+    "static/js/main.1625a85d.js"
   ]
 }
